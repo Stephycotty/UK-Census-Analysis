@@ -1,0 +1,125 @@
+---
+title: "Investigating the Relationship between Level of Education,Ethnicity,Income and Age in England Census Dataset"
+author: "Ibilate Cotterell"
+format: html
+code-fold: true
+code-link: true
+embed-resources: false
+execute:
+    warning : false
+toc: true
+output: true
+number-sections: true
+editor: visual
+bibliography: references.bib
+---
+
+## Introduction
+
+The investigation shows the intricate relationship between level of education,ethnicity and Income using the dataset provided by the 2021 England Census,employing the capabilities of the R programming language[@tidyverse][@ggthemes].This investigation will look for patterns and insight that will show the relationship between level of education, ethnicity , income level and age.This investigation aims to explore the how income distribution is influenced by the relationship between educational attainment and ethnic backgrounds and the impact of age.The goal of this analysis is to uncover similarities and differences that provide information about the possibilities and socioeconomic conditions among varied groups.
+
+## Data Understanding
+
+The data is a modified snapshot of information gathered during household census in England in 2021. Each observation in the data set comprises of Identification number for a household,individual ID number(person_ID), age, marital status(Mar_sat),annual Income,Gender(Female) - A binary variable that indicates whether or not a person has identified as female (0- yes,1-no),H8 - A binary variable indicating the response to census question H8(room accessibility;1-no,0-yes),Ethnicity(Eth) and highest level of education attained (highest_ed).In this investigation the analysis aims to explore how level of education and ethnicity influences income level.The variable worked with are highest_ed ,eth ,inc and age.
+
+```{r}
+#| label: loading packages 
+#| include: true
+library(tidyverse)
+library(ggthemes)
+```
+
+### Data Cleaning
+
+It is very crucial to clean the data to improve its quality and overall productivity. Now let's import the data to be used.
+
+```{r}
+#| label: loading data
+#| include: false
+dataframe <- read.csv('/Users/stephycotty/Desktop/Assessment data/data-1.csv')
+```
+
+```{r}
+#| label: check missing values
+dataframe <-janitor::clean_names(dataframe)
+dataframe <-dataframe %>% mutate_if(is.character,as.factor)
+missing_values <- dataframe |>
+  summarise_all(~sum(is.na(.)))
+missing_values
+view(dataframe)
+```
+
+```{r}
+#| label: getting rid of Na values
+data <- dataframe |>
+  filter(!is.na(inc) & !is.na(highest_ed) & !is.na(mar_stat))
+view(data)
+```
+
+## The Interesting Things I Discovered from the Data set
+
+**Data Visualization**: In this section ,i will create a boxplot and a barplot using ggplot[@ggplot2] to visualize and obtain the relationship and effect of income distribution on level of education , ethnicity and age.
+
+```{r}
+#|label: fig1 boxplot
+#|title: "Relationship between Highest Level of Education and Income Distributiion"
+ggplot(data, aes(y = fct_reorder(highest_ed, inc, median), x = inc)) +
+  geom_boxplot() +
+  labs(title ="Relationship between Highest Level of Education &Income",
+       subtitle = "Effect of Level of Education on average income",
+       x = "Income(Pounds)", y = "Highest_Ed")
+```
+
+Observation: The above box plot showing the effect of Level of Education on average income shows that individuals with master's or higher qualifications earn more income compared to individuals with lower qualifications such as a bachelor's degree, some HE, secondary school and less than secondary school. Here, individuals with "Less than Secondary School" qualifications earn the lowest. Looking at the outliers it still shows that masters or higher tend to have individuals in the category of 200,000 and above compared to other qualifications even though some HE qualification contains the person with the highest income.
+
+```{r}
+#|label: fig2 boxplot
+#|title: "Relationship between Ethnicity and Income Distribution using Barplot"
+ggplot(data, aes(y = fct_reorder(eth, inc, median), x = inc)) +
+  geom_boxplot() +
+  labs(title = "Relationship between Ethnicity and Income Distribution", 
+       subtitle ="The comparative distribution of income among different ethnic groups",
+       x = "Income"  , y="Ethnicity")
+```
+
+Observation: From the above box plot showing the comparative distribution of income among different ethnic groups it shows that white ethnic group have the highest average income as compared to the other ethnic groups and the question is why? This leads me to further exploration of the data set to check the ethnicity based on the highest education level because the previous plot above shows that people with a master's or higher have the highest average income compared to other educational levels. Does this mean the white ethnic group have a high proportion of individuals with qualifications above "Less than Secondary school" qualification? Now I will go further using barplot to show me the comparative distribution of Ethnicity based on the Highest Educational Level. See below;
+
+```{r}
+#|label: fig3 barplot
+#|title: "Relationship between Ethnicity and Highest Level of Education"
+ggplot(data, aes(x =eth, fill = highest_ed)) +
+  geom_bar(position = "fill") +
+  labs(title = "Relationship between Ethnicity and Highest Level of Education",
+       subtitle = "The comparative distribution of Ethnicity based on Highest Educational Level")
+```
+
+Observation: From the bar plot above showing the comparative distribution of Ethnicity based on the Highest Educational Level. It illustrates that Asians make up more than half of the ethnic group with the largest percentage of individuals with "less than secondary school" educational qualifications. This corresponds to the explanation of having the lowest average income. It is shown that the white ethnic group have a high percentage of individuals with educational qualification above "less than secondary school" qualification, this corresponds to the explanation of having the highest average income.
+
+```{r}
+#average age of various ethnicity
+mean(data$age)
+mean_age<- data|>
+  group_by(eth) |>
+  summarise(Mean_age = mean(age))
+print(mean_age)
+# Renaming the 'Eth' column to 'Ethnicity'
+#mean_age <- mean_age|>
+  #rename(Ethnicity = eth)
+#|label: fig4 barplot
+#|title: "Relationship between Ethnicity and Mean Age"
+ggplot(mean_age, aes(x = eth, y = Mean_age)) +
+  geom_bar(stat = "identity", fill = "steelblue")+
+  labs(title = "Relationship between Ethnicity and Mean Age")
+```
+
+Observation: The plot above indicates that the white ethnic group has the highest mean age, suggesting greater educational opportunities and potential for higher-income roles compared to other ethnic groups
+
+#### Conclusion
+
+According to the investigation in this census, there is a relationship between the white ethnic group's higher average income and their greater educational attainment.It suggests that a greater percentage of people in this ethnic group have education levels above "less than secondary school," which is consistent with their higher incomes and also the white ethnic group has the highest mean age, suggesting greater educational opportunities and potential for higher-income roles compared to other ethnic groups .Even though this correlation has been seen,it's important to remember that there are a number of other factors outside education that may also play a role in the differences in income between ethnic groups.Thus, while educational background may be important, income disparities may also be influenced by other socioeconomic factors.
+
+#### Criticism
+
+It is important to understand that correlation does not imply causation, even though the analysis shows correlations.Income disparities between various ethnic groups may also be greatly influenced by non-educational factors like systemic biases, discrimination, socioeconomic background, and access to opportunities.Furthermore,the data may not include all variables that affect income, which could leave out subtle factors that contribute to variations in income.
+
+Furthermore, the inefficiency of the data set was caused by high NA values, particularly in the non-female data, resulting in inconclusive representations of genders beyond females. Moreover, the lack of age groups made it difficult to classify age correctly, which complicated analyses pertaining to particular age ranges. Comprehensive insights were further hampered by missing data on kids, teens, people with disabilities, and specialised columns. Issues that were identified included the misclassification of ethnic groups and the possible concealment of significant income variations within specific age or ethnic groupings.
